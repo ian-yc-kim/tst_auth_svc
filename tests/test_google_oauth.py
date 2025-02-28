@@ -19,7 +19,7 @@ def test_google_login_redirect(monkeypatch, client):
     monkeypatch.setattr('tst_auth_svc.routers.google_oauth.generate_auth_url', fake_generate_auth_url)
 
     # Prevent automatic redirection so we can inspect the redirect response
-    response = client.get('/google-login', follow_redirects=False)
+    response = client.get('/auth/google/google-login', follow_redirects=False)
     # RedirectResponse typically returns status code 307 or 302
     assert response.status_code in [307, 302]
     # Ensure redirection URL is as expected
@@ -54,7 +54,7 @@ def test_google_callback_success(monkeypatch, client, db_session):
     db_session.commit()
     db_session.refresh(test_user)
 
-    response = client.get('/google-callback', params={'code': 'valid_code'})
+    response = client.get('/auth/google/google-callback', params={'code': 'valid_code'})
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert 'session_token' in data
@@ -63,7 +63,7 @@ def test_google_callback_success(monkeypatch, client, db_session):
 
 
 def test_google_callback_missing_code(client):
-    response = client.get('/google-callback')
+    response = client.get('/auth/google/google-callback')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert 'Authorization code is missing' in data.get('detail', '')
@@ -81,7 +81,7 @@ def test_google_callback_invalid_tokens(monkeypatch, client):
 
     monkeypatch.setattr('tst_auth_svc.routers.google_oauth.exchange_code_for_tokens', fake_exchange_code_for_tokens)
 
-    response = client.get('/google-callback', params={'code': 'any_code'})
+    response = client.get('/auth/google/google-callback', params={'code': 'any_code'})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert 'Invalid token exchange response' in data.get('detail', '')
@@ -104,7 +104,7 @@ def test_google_callback_user_not_found(monkeypatch, client, db_session):
 
     monkeypatch.setattr('tst_auth_svc.routers.google_oauth.exchange_code_for_tokens', fake_exchange_code_for_tokens)
 
-    response = client.get('/google-callback', params={'code': 'valid_code'})
+    response = client.get('/auth/google/google-callback', params={'code': 'valid_code'})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert 'User not found' in data.get('detail', '')
