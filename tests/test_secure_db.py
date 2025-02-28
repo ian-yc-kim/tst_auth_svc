@@ -5,16 +5,19 @@ from sqlalchemy.orm import Session
 from tst_auth_svc.models.base import get_secure_db
 
 
-# Test case to verify that get_secure_db returns a valid session
-
 def test_get_secure_db_success():
-    session = None
+    # get_secure_db returns a generator; extract the session using next()
+    gen = get_secure_db()
+    session = next(gen)
     try:
-        session = get_secure_db()
-        # Check that the returned session is an instance of Session
+        # Assert that the extracted session is an instance of Session
         assert isinstance(session, Session)
     finally:
-        # Close the session if created to free resources
+        # Advance generator to trigger cleanup; ignore StopIteration
+        try:
+            next(gen)
+        except StopIteration:
+            pass
         if session and hasattr(session, 'close'):
             try:
                 session.close()
@@ -22,21 +25,20 @@ def test_get_secure_db_success():
                 pass
 
 
-# Test case to simulate a connection failure and verify error logging and re-raising
-
 def test_get_secure_db_failure(monkeypatch, caplog):
     # Define a faulty session that always raises an exception
     def faulty_session(*args, **kwargs):
         raise Exception("Simulated connection error")
 
-    # Monkeypatch the sessionmaker in the module to simulate failure
+    # Monkeypatch sessionmaker to simulate failure
     monkeypatch.setattr('tst_auth_svc.models.base.sessionmaker', lambda bind: lambda: faulty_session())
 
+    gen = get_secure_db()
     with pytest.raises(Exception) as excinfo:
-        get_secure_db()
+        next(gen)
 
     assert "Simulated connection error" in str(excinfo.value)
 
-    # Check that the error was logged
+    # Verify that error was logged
     error_logged = any("Simulated connection error" in record.message for record in caplog.records)
     assert error_logged
