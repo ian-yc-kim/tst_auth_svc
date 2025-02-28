@@ -33,3 +33,7 @@ app.include_router(password_update.router)
 
 from tst_auth_svc.routers import logout
 app.include_router(logout.router)
+
+# Include the new Google OAuth router
+from tst_auth_svc.routers import google_oauth
+app.include_router(google_oauth.router)
