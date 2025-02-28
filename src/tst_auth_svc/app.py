@@ -30,3 +30,6 @@ app.include_router(password_reset.router)
 
 from tst_auth_svc.routers import password_update
 app.include_router(password_update.router)
+
+from tst_auth_svc.routers import logout
+app.include_router(logout.router)
