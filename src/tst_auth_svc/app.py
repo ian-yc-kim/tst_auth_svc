@@ -21,3 +21,6 @@ app.dependency_overrides[get_db] = get_secure_db
 # add routers
 from tst_auth_svc.routers import registration
 app.include_router(registration.router)
+
+from tst_auth_svc.routers import login
+app.include_router(login.router)
