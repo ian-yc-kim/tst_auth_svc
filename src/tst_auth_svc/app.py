@@ -24,3 +24,6 @@ app.include_router(registration.router)
 
 from tst_auth_svc.routers import login
 app.include_router(login.router)
+
+from tst_auth_svc.routers import password_reset
+app.include_router(password_reset.router)
